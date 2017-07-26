@@ -344,5 +344,112 @@ namespace CBOR.Tests
                 Assert.AreEqual(expected.Item2, reader.Type);
             }
         }
+
+        [TestMethod]
+        public void TestIndefinites()
+        {
+            var expectedValues = new List<Tuple<object, CBORType>> {
+                { -1l, CBORType.BytesBegin },
+                { new byte[]{ 0x01, 0x02 }, CBORType.Bytes },
+                { new byte[]{ 0x03, 0x04, 0x05 }, CBORType.Bytes },
+                { 0ul, CBORType.BytesEnd },
+            };
+
+            var reader = new CBORReader(new MemoryStream(new byte[] { 0x5f, 0x42, 0x01, 0x02, 0x43, 0x03, 0x04, 0x05, 0xff }));
+
+            foreach (var expected in expectedValues)
+            {
+                reader.Read();
+
+                if (expected.Item1.GetType() == typeof(byte[]))
+                {
+                    Assert.IsTrue(((byte[])expected.Item1).SequenceEqual((byte[])reader.Value));
+                }
+                else
+                {
+                    Assert.AreEqual(expected.Item1, reader.Value);
+                }
+                Assert.AreEqual(expected.Item2, reader.Type);
+            }
+
+            expectedValues = new List<Tuple<object, CBORType>> {
+                { -1l, CBORType.TextBegin },
+                { "strea", CBORType.Text },
+                { "ming", CBORType.Text},
+                { 0ul, CBORType.TextEnd },
+            };
+
+            reader = new CBORReader(new MemoryStream(new byte[] { 0x7f, 0x65, 0x73, 0x74, 0x72, 0x65, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x67, 0xff }));
+
+            foreach (var expected in expectedValues)
+            {
+                reader.Read();
+
+                Assert.AreEqual(expected.Item1, reader.Value);
+                Assert.AreEqual(expected.Item2, reader.Type);
+            }
+
+            expectedValues = new List<Tuple<object, CBORType>> {
+                { -1l, CBORType.ArrayBegin },
+                { 0ul, CBORType.ArrayEnd},
+            };
+
+            reader = new CBORReader(new MemoryStream(new byte[] { 0x9f, 0xff }));
+
+            foreach (var expected in expectedValues)
+            {
+                reader.Read();
+
+                Assert.AreEqual(expected.Item1, reader.Value);
+                Assert.AreEqual(expected.Item2, reader.Type);
+            }
+
+
+            expectedValues = new List<Tuple<object, CBORType>> {
+                { -1l, CBORType.ArrayBegin },
+                { 1ul, CBORType.PositiveInteger },
+                { 2ul, CBORType.ArrayBegin },
+                { 2ul, CBORType.PositiveInteger },
+                { 3ul, CBORType.PositiveInteger },
+                { 0ul, CBORType.ArrayEnd},
+                { -1l, CBORType.ArrayBegin },
+                { 4ul, CBORType.PositiveInteger },
+                { 5ul, CBORType.PositiveInteger },
+                { 0ul, CBORType.ArrayEnd},
+                { 0ul, CBORType.ArrayEnd},
+            };
+
+            reader = new CBORReader(new MemoryStream(new byte[] { 0x9f, 0x01, 0x82, 0x02, 0x03, 0x9f, 0x04, 0x05, 0xff, 0xff }));
+
+            foreach (var expected in expectedValues)
+            {
+                reader.Read();
+
+                Assert.AreEqual(expected.Item1, reader.Value);
+                Assert.AreEqual(expected.Item2, reader.Type);
+            }
+
+            expectedValues = new List<Tuple<object, CBORType>> {
+                { -1l, CBORType.MapBegin },
+                { "a", CBORType.Text },
+                { 1ul, CBORType.PositiveInteger },
+                { "b", CBORType.Text },
+                { -1l, CBORType.ArrayBegin },
+                { 2ul, CBORType.PositiveInteger },
+                { 3ul, CBORType.PositiveInteger },
+                { 0ul, CBORType.ArrayEnd},
+                { 0ul, CBORType.MapEnd},
+            };
+
+            reader = new CBORReader(new MemoryStream(new byte[] { 0xbf, 0x61, 0x61, 0x01, 0x61, 0x62, 0x9f, 0x02, 0x03, 0xff, 0xff }));
+
+            foreach (var expected in expectedValues)
+            {
+                reader.Read();
+
+                Assert.AreEqual(expected.Item1, reader.Value);
+                Assert.AreEqual(expected.Item2, reader.Type);
+            }
+        }
     }
 }

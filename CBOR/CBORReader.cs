@@ -87,6 +87,11 @@ namespace CBOR
 
             ReadInitialByte();
 
+            if (ParentState != null 
+                && (ParentState.MajorType == CBORMajorType.ByteString || ParentState.MajorType == CBORMajorType.TextString) 
+                && ParentState.MajorType != MajorType && !(MajorType == CBORMajorType.Primitive && SimpleType == (int) CBORSimpleType.Break))
+                throw new InvalidDataException("Indefinite byte/text string has incorrect nested major type");
+
             if (MajorType == CBORMajorType.Tagged)
             {
                 State.Tag = (int)Value;
@@ -122,9 +127,8 @@ namespace CBOR
                     }
                     else if (SimpleType == (int)CBORSimpleType.Undefined)
                     {
-                        // Todo: figure out how to represent "undefined" in C# 
+                        Value = null;
                         Type = CBORType.Undefined;
-                        //throw new NotImplementedException("Undefined simple type is not supported.");
                     }
                     else if (SimpleType == (int)CBORSimpleType.HalfFloat)
                     {
@@ -151,62 +155,60 @@ namespace CBOR
                                 Type = CBORType.ArrayEnd;
                             else if(State.MajorType == CBORMajorType.Map)
                                 Type = CBORType.MapEnd;
+                            else if (State.MajorType == CBORMajorType.ByteString)
+                                Type = CBORType.BytesEnd;
+                            else if (State.MajorType == CBORMajorType.TextString)
+                                Type = CBORType.TextEnd;
+                            Value = 0ul;
                         }
                         else
                             throw new InvalidDataException("Cannot break non indefinite collection");
                     }
                     //else
                         //throw new InvalidDataException();
-                    break; 
+                    break;
                 case CBORMajorType.ByteString:
+                    //Todo TextStrings and ByteStrings must have the same nested major type.
+                    if (State.IsIndefinite)
+                    {
+                        if (ParentState?.MajorType == CBORMajorType.ByteString)
+                            throw new InvalidDataException("Nested indefinite byte-string is not permitted");
+                        Type = CBORType.BytesBegin;
+                        Push();
+                        break;
+                    }
                     Type = CBORType.Bytes;
-                    PrepareCollection();
-                    if (MajorType != CBORMajorType.ByteString)
-                        throw new InvalidDataException("Indefinite byte-string has incorrect nested major type");
-                    if(State.IsIndefinite)
-                        throw new InvalidDataException("Nested indefinite byte-string is not permitted");
+                    State.Length = Convert.ToInt32((ulong)Value);
                     Value = _reader.ReadBytes(State.Length);
                     break;
                 case CBORMajorType.TextString:
-                    Type = CBORType.Text;
-                    PrepareCollection();
-                    if (MajorType != CBORMajorType.TextString)
-                        throw new InvalidDataException("Indefinite text-string has incorrect nested major type");
                     if (State.IsIndefinite)
-                        throw new InvalidDataException("Nested indefinite text-string is not permitted");
+                    {
+                        if (ParentState?.MajorType == CBORMajorType.TextString)
+                            throw new InvalidDataException("Nested indefinite text-string is not permitted");
+                        Type = CBORType.TextBegin;
+                        Push();
+                        break;
+                    }
+                    Type = CBORType.Text;
+                    State.Length = Convert.ToInt32((ulong)Value);
                     Value = System.Text.Encoding.UTF8.GetString(_reader.ReadBytes(State.Length));
                     break;
                 case CBORMajorType.Array:
-                    PrepareCollection();
                     Type = CBORType.ArrayBegin;
+                    if(!State.IsIndefinite)
+                        State.Length = Convert.ToInt32((ulong)Value);
                     Push();
                     break;
                 case CBORMajorType.Map:
-                    PrepareCollection();
-                    State.Length *= 2;
+                    if (!State.IsIndefinite)
+                        State.Length = Convert.ToInt32((ulong)Value)*2; // Maps always come in Key -> Value pairs. thus, items to read are doubled.
                     Type = CBORType.MapBegin;
                     Push();
                     break;
                 default:
                     throw new InvalidOperationException();
             }
-
-            System.Diagnostics.Debug.WriteLine($"Read ended with a type of {Value?.GetType()?.Name ?? "null"}");
-        }
-
-        private void PrepareCollection()
-        {
-            if (State.IsIndefinite)
-            {
-                //Todo TextStrings and ByteStrings must have the same nested major type.
-                Push();
-                ReadInitialByte();
-            }
-            else
-            {
-                State.Length = Convert.ToInt32((ulong)Value);
-            }
-
         }
 
         private void Push(CBORReaderState state = null)
@@ -233,7 +235,7 @@ namespace CBOR
                 case 26: Value = (ulong)_reader.ReadUInt32BE(); break; // IEEE 754 Single-Precision Float
                 case 27: Value = (ulong)_reader.ReadUInt64BE(); break; // IEEE 754 Double-Precision Float
                 case 28: case 29: case 30: throw new InvalidDataException(); // unassigned
-                case 31: State.IsIndefinite = true; break; // Indefinite array or map
+                case 31: State.IsIndefinite = true; Value = -1l; break; // Indefinite array or map
             }
         }
 
