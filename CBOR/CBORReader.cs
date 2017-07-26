@@ -35,7 +35,7 @@ namespace CBOR
     {
         public static readonly CBORMajorType[] Collectiontypes = new CBORMajorType[] { CBORMajorType.ByteString, CBORMajorType.TextString, CBORMajorType.Array, CBORMajorType.Map };
 
-        #region Proxy memboers to the current State
+#region Proxy memboers to the current State
 
         public CBORMajorType MajorType { get => State.MajorType; protected set => State.MajorType = value; } 
 
@@ -45,7 +45,7 @@ namespace CBOR
 
         public bool IsCollection => State.IsCollection;
 
-        #endregion
+#endregion
 
         public Object Value { get; protected set; }
 
@@ -97,23 +97,23 @@ namespace CBOR
                     Value = -1 - Convert.ToInt64((ulong)Value);
                     break;
                 case CBORMajorType.Primitive:
-                    if (SimpleType == CBORType.False)
+                    if (SimpleType == (int)CBORSimpleType.False)
                         Value = false;
-                    else if (SimpleType == CBORType.True)
+                    else if (SimpleType == (int)CBORSimpleType.True)
                         Value = true;
-                    else if (SimpleType == CBORType.Null)
+                    else if (SimpleType == (int)CBORSimpleType.Null)
                         Value = null;
-                    else if (SimpleType == CBORType.Undefined)
+                    else if (SimpleType == (int)CBORSimpleType.Undefined)
                         // Todo: figure out how to represent "undefined" in C# 
                         throw new NotImplementedException("Undefined simple type is not supported.");
-                    else if (SimpleType == CBORType.HalfFloat)
+                    else if (SimpleType == (int)CBORSimpleType.HalfFloat)
                         // Todo: Add support for IEEE 754 Half-Precision Floats
                         throw new NotImplementedException("IEEE 754 Half-Precision Floats is not supported.");
-                    if (SimpleType == CBORType.SingleFloat)
+                    if (SimpleType == (int)CBORSimpleType.SingleFloat)
                         Value = BitConverter.ToSingle(BitConverter.GetBytes((ulong)Value), 0);
-                    else if (SimpleType == CBORType.DoubleFloat)
+                    else if (SimpleType == (int)CBORSimpleType.DoubleFloat)
                         Value = BitConverter.ToDouble(BitConverter.GetBytes((ulong)Value), 0);
-                    else if (SimpleType == CBORType.Break) {
+                    else if (SimpleType == (int)CBORSimpleType.Break) {
                         if (ParentState?.IsIndefinite ?? false)
                             Pop();
                         else
