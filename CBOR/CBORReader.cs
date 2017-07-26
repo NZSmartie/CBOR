@@ -33,19 +33,20 @@ namespace CBOR
 
     public class CBORReader : IDisposable
     {
-        public static readonly CBORMajorType[] Collectiontypes = new CBORMajorType[] { CBORMajorType.ByteString, CBORMajorType.TextString, CBORMajorType.Array, CBORMajorType.Map };
+        internal static readonly CBORMajorType[] Collectiontypes = new CBORMajorType[] { CBORMajorType.ByteString, CBORMajorType.TextString, CBORMajorType.Array, CBORMajorType.Map };
 
 #region Proxy memboers to the current State
 
-        public CBORMajorType MajorType { get => State.MajorType; protected set => State.MajorType = value; } 
+        protected CBORMajorType MajorType { get => State.MajorType; set => State.MajorType = value; }
 
-        public int SimpleType { get => State.SimpleType; protected set => State.SimpleType = value; } 
+        protected int SimpleType { get => State.SimpleType; set => State.SimpleType = value; } 
+
+        protected bool IsCollection => State.IsCollection;
 
         public int Tag { get => State.Tag; protected set => State.Tag = value; }
 
-        public bool IsCollection => State.IsCollection;
-
 #endregion
+        public CBORType Type { get; protected set; }
 
         public Object Value { get; protected set; }
 
@@ -75,6 +76,11 @@ namespace CBOR
                 {
                     Pop();
                     Value = 0ul;
+
+                    if (State.MajorType == CBORMajorType.Array)
+                        Type = CBORType.ArrayEnd;
+                    else if (State.MajorType == CBORMajorType.Map)
+                        Type = CBORType.MapEnd;
                     return;
                 }
             }
@@ -91,31 +97,61 @@ namespace CBOR
             switch (MajorType)
             {
                 case CBORMajorType.UnsignedInteger:
+                    Type = CBORType.PositiveInteger;
                     // No need to do anyhting
                     break;
                 case CBORMajorType.NegativeInteger:
+                    Type = CBORType.NegativeInteger;
                     Value = -1 - Convert.ToInt64((ulong)Value);
                     break;
                 case CBORMajorType.Primitive:
                     if (SimpleType == (int)CBORSimpleType.False)
+                    {
                         Value = false;
+                        Type = CBORType.Bool;
+                    }
                     else if (SimpleType == (int)CBORSimpleType.True)
+                    {
                         Value = true;
+                        Type = CBORType.Bool;
+                    }
                     else if (SimpleType == (int)CBORSimpleType.Null)
+                    {
                         Value = null;
+                        Type = CBORType.Null;
+                    }
                     else if (SimpleType == (int)CBORSimpleType.Undefined)
+                    {
                         // Todo: figure out how to represent "undefined" in C# 
-                        throw new NotImplementedException("Undefined simple type is not supported.");
+                        Type = CBORType.Undefined;
+                        //throw new NotImplementedException("Undefined simple type is not supported.");
+                    }
                     else if (SimpleType == (int)CBORSimpleType.HalfFloat)
+                    {
+                        Type = CBORType.HalfFloat;
                         // Todo: Add support for IEEE 754 Half-Precision Floats
                         throw new NotImplementedException("IEEE 754 Half-Precision Floats is not supported.");
+                    }
                     if (SimpleType == (int)CBORSimpleType.SingleFloat)
+                    {
                         Value = BitConverter.ToSingle(BitConverter.GetBytes((ulong)Value), 0);
+                        Type = CBORType.SingleFloat;
+                    }
                     else if (SimpleType == (int)CBORSimpleType.DoubleFloat)
+                    {
                         Value = BitConverter.ToDouble(BitConverter.GetBytes((ulong)Value), 0);
-                    else if (SimpleType == (int)CBORSimpleType.Break) {
+                        Type = CBORType.DoubleFloat;
+                    }
+                    else if (SimpleType == (int)CBORSimpleType.Break)
+                    {
                         if (ParentState?.IsIndefinite ?? false)
+                        {
                             Pop();
+                            if(State.MajorType == CBORMajorType.Array)
+                                Type = CBORType.ArrayEnd;
+                            else if(State.MajorType == CBORMajorType.Map)
+                                Type = CBORType.MapEnd;
+                        }
                         else
                             throw new InvalidDataException("Cannot break non indefinite collection");
                     }
@@ -123,6 +159,7 @@ namespace CBOR
                         //throw new InvalidDataException();
                     break; 
                 case CBORMajorType.ByteString:
+                    Type = CBORType.Bytes;
                     PrepareCollection();
                     if (MajorType != CBORMajorType.ByteString)
                         throw new InvalidDataException("Indefinite byte-string has incorrect nested major type");
@@ -131,6 +168,7 @@ namespace CBOR
                     Value = _reader.ReadBytes(Convert.ToInt32((ulong)Value));
                     break;
                 case CBORMajorType.TextString:
+                    Type = CBORType.Text;
                     PrepareCollection();
                     if (MajorType != CBORMajorType.TextString)
                         throw new InvalidDataException("Indefinite text-string has incorrect nested major type");
@@ -140,13 +178,13 @@ namespace CBOR
                     break;
                 case CBORMajorType.Array:
                     PrepareCollection();
-                    Push(new CBORReaderState
-                    {
-                        MajorType = MajorType,
-                    });
-                    //Read();
+                    Type = CBORType.ArrayBegin;
+                    Push();
                     break;
                 case CBORMajorType.Map:
+                    PrepareCollection();
+                    Type = CBORType.MapBegin;
+                    Push();
                     break;
                 default:
                     throw new InvalidOperationException();
