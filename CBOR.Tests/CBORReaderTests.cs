@@ -15,8 +15,6 @@ namespace CBOR.Tests
         [TestMethod]
         public void TestPrimitives()
         {
-            CBORReader reader;
-
             var source = new List<Tuple<object, byte[]>>
             {
                 { false, new byte[] { 0xf4 } },
@@ -29,16 +27,20 @@ namespace CBOR.Tests
             };
             foreach (var pair in source)
             {
-                reader = new CBORReader(new MemoryStream(pair.Item2));
-                reader.Read();
+                using (var reader = new CBORReader(new MemoryStream(pair.Item2)))
+                {
+                    reader.Read();
 
-                Assert.AreEqual(pair.Item1, reader.Value);
+                    Assert.AreEqual(pair.Item1, reader.Value);
+                }
             }
 
-            reader = new CBORReader(new MemoryStream(new byte[] { 0xf6 }));
-            reader.Read();
+            using (var reader = new CBORReader(new MemoryStream(new byte[] { 0xf6 })))
+            {
+                reader.Read();
 
-            Assert.IsNull(reader.Value);
+                Assert.IsNull(reader.Value);
+            }
         }
 
         [TestMethod]
@@ -66,10 +68,12 @@ namespace CBOR.Tests
                 { -1000l, new byte[] { 0x39, 0x03, 0xe7 } },
             };
             foreach (var pair in source) {
-                CBORReader reader = new CBORReader(new MemoryStream(pair.Item2));
-                reader.Read();
+                using (var reader = new CBORReader(new MemoryStream(pair.Item2)))
+                {
+                    reader.Read();
 
-                Assert.AreEqual(pair.Item1, reader.Value);
+                    Assert.AreEqual(pair.Item1, reader.Value);
+                }
             }
         }
 
@@ -89,10 +93,12 @@ namespace CBOR.Tests
             };
             foreach (var pair in source)
             {
-                CBORReader reader = new CBORReader(new MemoryStream(pair.Item2));
-                reader.Read();
+                using (var reader = new CBORReader(new MemoryStream(pair.Item2)))
+                {
+                    reader.Read();
 
-                Assert.AreEqual(pair.Item1, reader.Value);
+                    Assert.AreEqual(pair.Item1, reader.Value);
+                }
             }
         }
 
@@ -115,17 +121,18 @@ namespace CBOR.Tests
             };
             foreach (var pair in source)
             {
-                CBORReader reader = new CBORReader(new MemoryStream(pair.Item2));
-                reader.Read();
+                using (var reader = new CBORReader(new MemoryStream(pair.Item2)))
+                {
+                    reader.Read();
 
-                Assert.AreEqual(pair.Item1, reader.Value);
+                    Assert.AreEqual(pair.Item1, reader.Value);
+                }
             }
         }
 
         [TestMethod]
         public void TestStrings()
         {
-            CBORReader reader;
             var byteStrings = new List<Tuple<byte[], byte[]>>
             {
                 { new byte[] { }, new byte[] { 0x40 } },
@@ -133,10 +140,12 @@ namespace CBOR.Tests
             };
             foreach (var pair in byteStrings)
             {
-                reader = new CBORReader(new MemoryStream(pair.Item2));
-                reader.Read();
+                using (var reader = new CBORReader(new MemoryStream(pair.Item2)))
+                {
+                    reader.Read();
 
-                Assert.IsTrue(pair.Item1.SequenceEqual((byte[])reader.Value));
+                    Assert.IsTrue(pair.Item1.SequenceEqual((byte[])reader.Value));
+                }
             }
 
             var textStrings = new List<Tuple<string, byte[]>>
@@ -151,10 +160,12 @@ namespace CBOR.Tests
             };
             foreach (var pair in textStrings)
             {
-                reader = new CBORReader(new MemoryStream(pair.Item2));
-                reader.Read();
+                using (var reader = new CBORReader(new MemoryStream(pair.Item2)))
+                {
+                    reader.Read();
 
-                Assert.AreEqual(pair.Item1, reader.Value);
+                    Assert.AreEqual(pair.Item1, reader.Value);
+                }
             }
         }
 
@@ -169,14 +180,16 @@ namespace CBOR.Tests
                 { 0ul, CBORType.ArrayEnd },
             };
 
-            var reader = new CBORReader(new MemoryStream(new byte[] { 0x83, 0x01, 0x02, 0x03 }));
-
-            foreach (var expected in expectedValues)
+            using (var reader = new CBORReader(new MemoryStream(new byte[] { 0x83, 0x01, 0x02, 0x03 })))
             {
-                reader.Read();
 
-                Assert.AreEqual(expected.Item1, reader.Value);
-                Assert.AreEqual(expected.Item2, reader.Type);
+                foreach (var expected in expectedValues)
+                {
+                    reader.Read();
+
+                    Assert.AreEqual(expected.Item1, reader.Value);
+                    Assert.AreEqual(expected.Item2, reader.Type);
+                }
             }
 
             expectedValues = new List<Tuple<ulong, CBORType>> {
@@ -209,18 +222,20 @@ namespace CBOR.Tests
                 { 0ul,  CBORType.ArrayEnd },
             };
 
-            reader = new CBORReader(new MemoryStream(new byte[] {
+            using (var reader = new CBORReader(new MemoryStream(new byte[] {
                 0x98, 0x19, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
                 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e,
                 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16,
-                0x17, 0x18, 0x18, 0x18, 0x19 }));
-
-            foreach (var expected in expectedValues)
+                0x17, 0x18, 0x18, 0x18, 0x19 })))
             {
-                reader.Read();
 
-                Assert.AreEqual(expected.Item1, reader.Value);
-                Assert.AreEqual(expected.Item2, reader.Type);
+                foreach (var expected in expectedValues)
+                {
+                    reader.Read();
+
+                    Assert.AreEqual(expected.Item1, reader.Value);
+                    Assert.AreEqual(expected.Item2, reader.Type);
+                }
             }
         }
 
@@ -241,14 +256,16 @@ namespace CBOR.Tests
                 { 0ul, CBORType.ArrayEnd },
             };
 
-            var reader = new CBORReader(new MemoryStream(new byte[] { 0x83, 0x01, 0x82, 0x02, 0x03, 0x82, 0x04, 0x05 }));
-
-            foreach (var expected in expectedValues)
+            using (var reader = new CBORReader(new MemoryStream(new byte[] { 0x83, 0x01, 0x82, 0x02, 0x03, 0x82, 0x04, 0x05 })))
             {
-                reader.Read();
 
-                Assert.AreEqual(expected.Item1, reader.Value);
-                Assert.AreEqual(expected.Item2, reader.Type);
+                foreach (var expected in expectedValues)
+                {
+                    reader.Read();
+
+                    Assert.AreEqual(expected.Item1, reader.Value);
+                    Assert.AreEqual(expected.Item2, reader.Type);
+                }
             }
         }
 
@@ -260,14 +277,16 @@ namespace CBOR.Tests
                 { 0ul, CBORType.MapEnd },
             };
 
-            var reader = new CBORReader(new MemoryStream(new byte[] { 0xa0 }));
-
-            foreach (var expected in expectedValues)
+            using (var reader = new CBORReader(new MemoryStream(new byte[] { 0xa0 })))
             {
-                reader.Read();
 
-                Assert.AreEqual(expected.Item1, reader.Value);
-                Assert.AreEqual(expected.Item2, reader.Type);
+                foreach (var expected in expectedValues)
+                {
+                    reader.Read();
+
+                    Assert.AreEqual(expected.Item1, reader.Value);
+                    Assert.AreEqual(expected.Item2, reader.Type);
+                }
             }
 
             //{ 1: 2, 3: 4}
@@ -282,14 +301,16 @@ namespace CBOR.Tests
                 { 0ul, CBORType.MapEnd },
             };
 
-            reader = new CBORReader(new MemoryStream(new byte[] { 0xa2, 0x01, 0x02, 0x03, 0x04 }));
-
-            foreach (var expected in expectedValues)
+            using (var reader = new CBORReader(new MemoryStream(new byte[] { 0xa2, 0x01, 0x02, 0x03, 0x04 })))
             {
-                reader.Read();
 
-                Assert.AreEqual(expected.Item1, reader.Value);
-                Assert.AreEqual(expected.Item2, reader.Type);
+                foreach (var expected in expectedValues)
+                {
+                    reader.Read();
+
+                    Assert.AreEqual(expected.Item1, reader.Value);
+                    Assert.AreEqual(expected.Item2, reader.Type);
+                }
             }
         }
 
@@ -311,14 +332,16 @@ namespace CBOR.Tests
                 { 0ul, CBORType.MapEnd },
             };
 
-            var reader = new CBORReader(new MemoryStream(new byte[] { 0xa2, 0x61, 0x61, 0x01, 0x61, 0x62, 0x82, 0x02, 0x03 }));
-
-            foreach (var expected in expectedValues)
+            using (var reader = new CBORReader(new MemoryStream(new byte[] { 0xa2, 0x61, 0x61, 0x01, 0x61, 0x62, 0x82, 0x02, 0x03 })))
             {
-                reader.Read();
 
-                Assert.AreEqual(expected.Item1, reader.Value);
-                Assert.AreEqual(expected.Item2, reader.Type);
+                foreach (var expected in expectedValues)
+                {
+                    reader.Read();
+
+                    Assert.AreEqual(expected.Item1, reader.Value);
+                    Assert.AreEqual(expected.Item2, reader.Type);
+                }
             }
 
             //["a", {"b": "c"}]        
@@ -334,14 +357,16 @@ namespace CBOR.Tests
                 { 0ul, CBORType.ArrayEnd },
             };
 
-            reader = new CBORReader(new MemoryStream(new byte[] { 0x82, 0x61, 0x61, 0xa1, 0x61, 0x62, 0x61, 0x63 }));
-
-            foreach (var expected in expectedValues)
+            using (var reader = new CBORReader(new MemoryStream(new byte[] { 0x82, 0x61, 0x61, 0xa1, 0x61, 0x62, 0x61, 0x63 })))
             {
-                reader.Read();
 
-                Assert.AreEqual(expected.Item1, reader.Value);
-                Assert.AreEqual(expected.Item2, reader.Type);
+                foreach (var expected in expectedValues)
+                {
+                    reader.Read();
+
+                    Assert.AreEqual(expected.Item1, reader.Value);
+                    Assert.AreEqual(expected.Item2, reader.Type);
+                }
             }
         }
 
@@ -355,21 +380,22 @@ namespace CBOR.Tests
                 { 0ul, CBORType.BytesEnd },
             };
 
-            var reader = new CBORReader(new MemoryStream(new byte[] { 0x5f, 0x42, 0x01, 0x02, 0x43, 0x03, 0x04, 0x05, 0xff }));
+            using (var reader = new CBORReader(new MemoryStream(new byte[] { 0x5f, 0x42, 0x01, 0x02, 0x43, 0x03, 0x04, 0x05, 0xff }))) {
 
-            foreach (var expected in expectedValues)
-            {
-                reader.Read();
+                foreach (var expected in expectedValues)
+                {
+                    reader.Read();
 
-                if (expected.Item1.GetType() == typeof(byte[]))
-                {
-                    Assert.IsTrue(((byte[])expected.Item1).SequenceEqual((byte[])reader.Value));
+                    if (expected.Item1.GetType() == typeof(byte[]))
+                    {
+                        Assert.IsTrue(((byte[])expected.Item1).SequenceEqual((byte[])reader.Value));
+                    }
+                    else
+                    {
+                        Assert.AreEqual(expected.Item1, reader.Value);
+                    }
+                    Assert.AreEqual(expected.Item2, reader.Type);
                 }
-                else
-                {
-                    Assert.AreEqual(expected.Item1, reader.Value);
-                }
-                Assert.AreEqual(expected.Item2, reader.Type);
             }
 
             expectedValues = new List<Tuple<object, CBORType>> {
@@ -379,14 +405,15 @@ namespace CBOR.Tests
                 { 0ul, CBORType.TextEnd },
             };
 
-            reader = new CBORReader(new MemoryStream(new byte[] { 0x7f, 0x65, 0x73, 0x74, 0x72, 0x65, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x67, 0xff }));
+            using (var reader = new CBORReader(new MemoryStream(new byte[] { 0x7f, 0x65, 0x73, 0x74, 0x72, 0x65, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x67, 0xff }))) {
 
-            foreach (var expected in expectedValues)
-            {
-                reader.Read();
+                foreach (var expected in expectedValues)
+                {
+                    reader.Read();
 
-                Assert.AreEqual(expected.Item1, reader.Value);
-                Assert.AreEqual(expected.Item2, reader.Type);
+                    Assert.AreEqual(expected.Item1, reader.Value);
+                    Assert.AreEqual(expected.Item2, reader.Type);
+                }
             }
 
             expectedValues = new List<Tuple<object, CBORType>> {
@@ -394,16 +421,16 @@ namespace CBOR.Tests
                 { 0ul, CBORType.ArrayEnd},
             };
 
-            reader = new CBORReader(new MemoryStream(new byte[] { 0x9f, 0xff }));
+            using (var reader = new CBORReader(new MemoryStream(new byte[] { 0x9f, 0xff }))) {
 
-            foreach (var expected in expectedValues)
-            {
-                reader.Read();
+                foreach (var expected in expectedValues)
+                {
+                    reader.Read();
 
-                Assert.AreEqual(expected.Item1, reader.Value);
-                Assert.AreEqual(expected.Item2, reader.Type);
+                    Assert.AreEqual(expected.Item1, reader.Value);
+                    Assert.AreEqual(expected.Item2, reader.Type);
+                }
             }
-
 
             expectedValues = new List<Tuple<object, CBORType>> {
                 { -1l, CBORType.ArrayBegin },
@@ -419,14 +446,15 @@ namespace CBOR.Tests
                 { 0ul, CBORType.ArrayEnd},
             };
 
-            reader = new CBORReader(new MemoryStream(new byte[] { 0x9f, 0x01, 0x82, 0x02, 0x03, 0x9f, 0x04, 0x05, 0xff, 0xff }));
+            using (var reader = new CBORReader(new MemoryStream(new byte[] { 0x9f, 0x01, 0x82, 0x02, 0x03, 0x9f, 0x04, 0x05, 0xff, 0xff }))) {
 
-            foreach (var expected in expectedValues)
-            {
-                reader.Read();
+                foreach (var expected in expectedValues)
+                {
+                    reader.Read();
 
-                Assert.AreEqual(expected.Item1, reader.Value);
-                Assert.AreEqual(expected.Item2, reader.Type);
+                    Assert.AreEqual(expected.Item1, reader.Value);
+                    Assert.AreEqual(expected.Item2, reader.Type);
+                }
             }
 
             expectedValues = new List<Tuple<object, CBORType>> {
@@ -441,14 +469,15 @@ namespace CBOR.Tests
                 { 0ul, CBORType.MapEnd},
             };
 
-            reader = new CBORReader(new MemoryStream(new byte[] { 0xbf, 0x61, 0x61, 0x01, 0x61, 0x62, 0x9f, 0x02, 0x03, 0xff, 0xff }));
+            using (var reader = new CBORReader(new MemoryStream(new byte[] { 0xbf, 0x61, 0x61, 0x01, 0x61, 0x62, 0x9f, 0x02, 0x03, 0xff, 0xff }))) {
 
-            foreach (var expected in expectedValues)
-            {
-                reader.Read();
+                foreach (var expected in expectedValues)
+                {
+                    reader.Read();
 
-                Assert.AreEqual(expected.Item1, reader.Value);
-                Assert.AreEqual(expected.Item2, reader.Type);
+                    Assert.AreEqual(expected.Item1, reader.Value);
+                    Assert.AreEqual(expected.Item2, reader.Type);
+                }
             }
         }
     }
