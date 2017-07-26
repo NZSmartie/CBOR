@@ -17,7 +17,7 @@ namespace CBOR.Tests
         {
             CBORReader reader;
 
-            var source = new Dictionary<object, byte[]>
+            var source = new List<Tuple<object, byte[]>>
             {
                 { false, new byte[] { 0xf4 } },
                 { true, new byte[] { 0xf5 } },
@@ -29,10 +29,10 @@ namespace CBOR.Tests
             };
             foreach (var pair in source)
             {
-                reader = new CBORReader(new MemoryStream(pair.Value));
+                reader = new CBORReader(new MemoryStream(pair.Item2));
                 reader.Read();
-                
-                Assert.AreEqual(pair.Key, reader.Value);
+
+                Assert.AreEqual(pair.Item1, reader.Value);
             }
 
             reader = new CBORReader(new MemoryStream(new byte[] { 0xf6 }));
@@ -44,7 +44,7 @@ namespace CBOR.Tests
         [TestMethod]
         public void TestIntegers()
         {
-            var source = new Dictionary<object, byte[]>
+            var source = new List<Tuple<object, byte[]>>
             {
                 { 0ul, new byte[] { 0x00 } },
                 { 1ul, new byte[] { 0x01 } },
@@ -66,10 +66,10 @@ namespace CBOR.Tests
                 { -1000l, new byte[] { 0x39, 0x03, 0xe7 } },
             };
             foreach (var pair in source) {
-                CBORReader reader = new CBORReader(new MemoryStream(pair.Value));
+                CBORReader reader = new CBORReader(new MemoryStream(pair.Item2));
                 reader.Read();
 
-                Assert.AreEqual(pair.Key, reader.Value);
+                Assert.AreEqual(pair.Item1, reader.Value);
             }
         }
 
@@ -78,14 +78,14 @@ namespace CBOR.Tests
         {
             var source = new List<Tuple<object, byte[]>>
             {
-                new Tuple<object, byte[]>( 0.0, new byte[] { 0xf9, 0x00, 0x00 } ),
-                new Tuple<object, byte[]>( -0.0, new byte[] { 0xf9, 0x80, 0x00 } ),
-                new Tuple<object, byte[]>( 1.0, new byte[] { 0xf9, 0x3c, 0x00 } ),
-                new Tuple<object, byte[]>( 1.5, new byte[] { 0xf9, 0x3e, 0x00 } ),
-                new Tuple<object, byte[]>( 65504.0, new byte[] { 0xf9, 0x7b, 0xff } ),
-                new Tuple<object, byte[]>( 5.960464477539063e-8, new byte[] { 0xf9, 0x00, 0x01 } ),
-                new Tuple<object, byte[]>( 0.00006103515625, new byte[] { 0xf9, 0x04, 0x00 } ),
-                new Tuple<object, byte[]>(  -4.0, new byte[] { 0xf9, 0xc4, 0x00 } ),
+                { 0.0, new byte[] { 0xf9, 0x00, 0x00 } },
+                { -0.0, new byte[] { 0xf9, 0x80, 0x00 } },
+                { 1.0, new byte[] { 0xf9, 0x3c, 0x00 } },
+                { 1.5, new byte[] { 0xf9, 0x3e, 0x00 } },
+                { 65504.0, new byte[] { 0xf9, 0x7b, 0xff } },
+                { 5.960464477539063e-8, new byte[] { 0xf9, 0x00, 0x01 } },
+                { 0.00006103515625, new byte[] { 0xf9, 0x04, 0x00 } },
+                { -4.0, new byte[] { 0xf9, 0xc4, 0x00 } },
             };
             foreach (var pair in source)
             {
@@ -101,17 +101,17 @@ namespace CBOR.Tests
         {
             var source = new List<Tuple<object, byte[]>>
             {
-                new Tuple<object, byte[]>( 1.1, new byte[] { 0xfb, 0x3f, 0xf1, 0x99, 0x99, 0x99, 0x99, 0x99, 0x9a } ),
-                new Tuple<object, byte[]>( 100000.0f, new byte[] { 0xfa, 0x47, 0xc3, 0x50, 0x00 } ),
-                new Tuple<object, byte[]>( 3.4028234663852886e+38f, new byte[] { 0xfa, 0x7f, 0x7f, 0xff, 0xff } ),
-                new Tuple<object, byte[]>( 1.0e+300d, new byte[] { 0xfb, 0x7e, 0x37, 0xe4, 0x3c, 0x88, 0x00, 0x75, 0x9c } ),
-                new Tuple<object, byte[]>( -4.1, new byte[] { 0xfb, 0xc0, 0x10, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66 } ),
-                new Tuple<object, byte[]>( float.PositiveInfinity, new byte[] { 0xfa, 0x7f, 0x80, 0x00, 0x00 } ),
-                new Tuple<object, byte[]>( float.NaN, new byte[] { 0xfa, 0x7f, 0xC0, 0x00, 0x00 } ),
-                new Tuple<object, byte[]>( float.NegativeInfinity, new byte[] { 0xfa, 0xFf, 0x80, 0x00, 0x00 } ),
-                new Tuple<object, byte[]>( double.PositiveInfinity, new byte[] { 0xfb, 0x7f, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } ),
-                new Tuple<object, byte[]>( double.NaN, new byte[] { 0xfb, 0x7f, 0xf8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } ),
-                new Tuple<object, byte[]>( double.NegativeInfinity, new byte[] { 0xfb, 0xFf, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } ),
+                { 1.1, new byte[] { 0xfb, 0x3f, 0xf1, 0x99, 0x99, 0x99, 0x99, 0x99, 0x9a } },
+                { 100000.0f, new byte[] { 0xfa, 0x47, 0xc3, 0x50, 0x00 } },
+                { 3.4028234663852886e+38f, new byte[] { 0xfa, 0x7f, 0x7f, 0xff, 0xff } },
+                { 1.0e+300d, new byte[] { 0xfb, 0x7e, 0x37, 0xe4, 0x3c, 0x88, 0x00, 0x75, 0x9c } },
+                { -4.1, new byte[] { 0xfb, 0xc0, 0x10, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66 } },
+                { float.PositiveInfinity, new byte[] { 0xfa, 0x7f, 0x80, 0x00, 0x00 } },
+                { float.NaN, new byte[] { 0xfa, 0x7f, 0xC0, 0x00, 0x00 } },
+                { float.NegativeInfinity, new byte[] { 0xfa, 0xFf, 0x80, 0x00, 0x00 } },
+                { double.PositiveInfinity, new byte[] { 0xfb, 0x7f, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } },
+                { double.NaN, new byte[] { 0xfb, 0x7f, 0xf8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } },
+                { double.NegativeInfinity, new byte[] { 0xfb, 0xFf, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } },
             };
             foreach (var pair in source)
             {
@@ -128,8 +128,8 @@ namespace CBOR.Tests
             CBORReader reader;
             var byteStrings = new List<Tuple<byte[], byte[]>>
             {
-                new Tuple<byte[], byte[]>( new byte[] { }, new byte[] { 0x40 } ),
-                new Tuple<byte[], byte[]>( new byte [] {0x01, 0x02, 0x03, 0x04 } , new byte[] { 0x44, 0x01, 0x02, 0x03, 0x04 } ),
+                { new byte[] { }, new byte[] { 0x40 } },
+                { new byte[] { 0x01, 0x02, 0x03, 0x04 } , new byte[] { 0x44, 0x01, 0x02, 0x03, 0x04 } },
             };
             foreach (var pair in byteStrings)
             {
@@ -141,13 +141,13 @@ namespace CBOR.Tests
 
             var textStrings = new List<Tuple<string, byte[]>>
             {
-                new Tuple<string, byte[]>( "", new byte[] { 0x60 } ),
-                new Tuple<string, byte[]>( "a", new byte[] { 0x61, 0x61 } ),
-                new Tuple<string, byte[]>( "IETF", new byte[] { 0x64, 0x49, 0x45, 0x54, 0x46 } ),
-                new Tuple<string, byte[]>( "\"\\", new byte[] { 0x62, 0x22, 0x5c } ),
-                new Tuple<string, byte[]>( "\u00fc", new byte[] { 0x62, 0xc3, 0xbc } ),
-                new Tuple<string, byte[]>( "\u6c34", new byte[] { 0x63, 0xe6, 0xb0, 0xb4 } ),
-                new Tuple<string, byte[]>( "\ud800\udd51", new byte[] { 0x64, 0xf0, 0x90, 0x85, 0x91 } ),
+                { "", new byte[] { 0x60 } },
+                { "a", new byte[] { 0x61, 0x61 } },
+                { "IETF", new byte[] { 0x64, 0x49, 0x45, 0x54, 0x46 } },
+                { "\"\\", new byte[] { 0x62, 0x22, 0x5c } },
+                { "\u00fc", new byte[] { 0x62, 0xc3, 0xbc } },
+                { "\u6c34", new byte[] { 0x63, 0xe6, 0xb0, 0xb4 } },
+                { "\ud800\udd51", new byte[] { 0x64, 0xf0, 0x90, 0x85, 0x91 } },
             };
             foreach (var pair in textStrings)
             {
@@ -162,13 +162,13 @@ namespace CBOR.Tests
         public void TestArray()
         {
             var expectedValues = new List<Tuple<ulong, CBORType>> {
-                new Tuple<ulong, CBORType>(3, CBORType.ArrayBegin),
-                new Tuple<ulong, CBORType>(1, CBORType.PositiveInteger),
-                new Tuple<ulong, CBORType>(2, CBORType.PositiveInteger),
-                new Tuple<ulong, CBORType>(3, CBORType.PositiveInteger),
-                new Tuple<ulong, CBORType>(0, CBORType.ArrayEnd)
+                { 3ul, CBORType.ArrayBegin },
+                { 1ul, CBORType.PositiveInteger },
+                { 2ul, CBORType.PositiveInteger },
+                { 3ul, CBORType.PositiveInteger },
+                { 0ul, CBORType.ArrayEnd },
             };
-                
+
             var reader = new CBORReader(new MemoryStream(new byte[] { 0x83, 0x01, 0x02, 0x03 }));
 
             foreach (var expected in expectedValues)
@@ -180,33 +180,33 @@ namespace CBOR.Tests
             }
 
             expectedValues = new List<Tuple<ulong, CBORType>> {
-                new Tuple<ulong, CBORType>(25, CBORType.ArrayBegin),
-                new Tuple<ulong, CBORType>(1,  CBORType.PositiveInteger),
-                new Tuple<ulong, CBORType>(2,  CBORType.PositiveInteger),
-                new Tuple<ulong, CBORType>(3,  CBORType.PositiveInteger),
-                new Tuple<ulong, CBORType>(4,  CBORType.PositiveInteger),
-                new Tuple<ulong, CBORType>(5,  CBORType.PositiveInteger),
-                new Tuple<ulong, CBORType>(6,  CBORType.PositiveInteger),
-                new Tuple<ulong, CBORType>(7,  CBORType.PositiveInteger),
-                new Tuple<ulong, CBORType>(8,  CBORType.PositiveInteger),
-                new Tuple<ulong, CBORType>(9,  CBORType.PositiveInteger),
-                new Tuple<ulong, CBORType>(10, CBORType.PositiveInteger),
-                new Tuple<ulong, CBORType>(11, CBORType.PositiveInteger),
-                new Tuple<ulong, CBORType>(12, CBORType.PositiveInteger),
-                new Tuple<ulong, CBORType>(13, CBORType.PositiveInteger),
-                new Tuple<ulong, CBORType>(14, CBORType.PositiveInteger),
-                new Tuple<ulong, CBORType>(15, CBORType.PositiveInteger),
-                new Tuple<ulong, CBORType>(16, CBORType.PositiveInteger),
-                new Tuple<ulong, CBORType>(17, CBORType.PositiveInteger),
-                new Tuple<ulong, CBORType>(18, CBORType.PositiveInteger),
-                new Tuple<ulong, CBORType>(19, CBORType.PositiveInteger),
-                new Tuple<ulong, CBORType>(20, CBORType.PositiveInteger),
-                new Tuple<ulong, CBORType>(21, CBORType.PositiveInteger),
-                new Tuple<ulong, CBORType>(22, CBORType.PositiveInteger),
-                new Tuple<ulong, CBORType>(23, CBORType.PositiveInteger),
-                new Tuple<ulong, CBORType>(24, CBORType.PositiveInteger),
-                new Tuple<ulong, CBORType>(25, CBORType.PositiveInteger),
-                new Tuple<ulong, CBORType>(0,  CBORType.ArrayEnd)
+                { 25ul, CBORType.ArrayBegin },
+                { 1ul,  CBORType.PositiveInteger },
+                { 2ul,  CBORType.PositiveInteger },
+                { 3ul,  CBORType.PositiveInteger },
+                { 4ul,  CBORType.PositiveInteger },
+                { 5ul,  CBORType.PositiveInteger },
+                { 6ul,  CBORType.PositiveInteger },
+                { 7ul,  CBORType.PositiveInteger },
+                { 8ul,  CBORType.PositiveInteger },
+                { 9ul,  CBORType.PositiveInteger },
+                { 10ul, CBORType.PositiveInteger },
+                { 11ul, CBORType.PositiveInteger },
+                { 12ul, CBORType.PositiveInteger },
+                { 13ul, CBORType.PositiveInteger },
+                { 14ul, CBORType.PositiveInteger },
+                { 15ul, CBORType.PositiveInteger },
+                { 16ul, CBORType.PositiveInteger },
+                { 17ul, CBORType.PositiveInteger },
+                { 18ul, CBORType.PositiveInteger },
+                { 19ul, CBORType.PositiveInteger },
+                { 20ul, CBORType.PositiveInteger },
+                { 21ul, CBORType.PositiveInteger },
+                { 22ul, CBORType.PositiveInteger },
+                { 23ul, CBORType.PositiveInteger },
+                { 24ul, CBORType.PositiveInteger },
+                { 25ul, CBORType.PositiveInteger },
+                { 0ul,  CBORType.ArrayEnd },
             };
 
             reader = new CBORReader(new MemoryStream(new byte[] {
