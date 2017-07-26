@@ -5,6 +5,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using CBOR;
+using CBOR.Tests.Extensions;
 
 namespace CBOR.Tests
 {
@@ -223,33 +224,125 @@ namespace CBOR.Tests
             }
         }
 
-    [TestMethod]
-    public void TestNestedArray()
-    {
-        var expectedValues = new List<Tuple<ulong, CBORType>> {
-            // [1, [2, 3], [4, 5]]
-            new Tuple<ulong, CBORType>(3, CBORType.ArrayBegin),
-            new Tuple<ulong, CBORType>(1, CBORType.PositiveInteger),
-            new Tuple<ulong, CBORType>(2, CBORType.ArrayBegin),
-            new Tuple<ulong, CBORType>(2, CBORType.PositiveInteger),
-            new Tuple<ulong, CBORType>(3, CBORType.PositiveInteger),
-            new Tuple<ulong, CBORType>(0, CBORType.ArrayEnd),
-            new Tuple<ulong, CBORType>(2, CBORType.ArrayBegin),
-            new Tuple<ulong, CBORType>(4, CBORType.PositiveInteger),
-            new Tuple<ulong, CBORType>(5, CBORType.PositiveInteger),
-            new Tuple<ulong, CBORType>(0, CBORType.ArrayEnd),
-            new Tuple<ulong, CBORType>(0, CBORType.ArrayEnd),
-        };
-
-        var reader = new CBORReader(new MemoryStream(new byte[] { 0x83, 0x01, 0x82, 0x02, 0x03, 0x82, 0x04, 0x05 }));
-
-        foreach (var expected in expectedValues)
+        [TestMethod]
+        public void TestNestedArray()
         {
-            reader.Read();
+            var expectedValues = new List<Tuple<ulong, CBORType>> {
+                { 3ul, CBORType.ArrayBegin },
+                { 1ul, CBORType.PositiveInteger },
+                { 2ul, CBORType.ArrayBegin },
+                { 2ul, CBORType.PositiveInteger },
+                { 3ul, CBORType.PositiveInteger },
+                { 0ul, CBORType.ArrayEnd },
+                { 2ul, CBORType.ArrayBegin },
+                { 4ul, CBORType.PositiveInteger },
+                { 5ul, CBORType.PositiveInteger },
+                { 0ul, CBORType.ArrayEnd },
+                { 0ul, CBORType.ArrayEnd },
+            };
 
-            Assert.AreEqual(expected.Item1, reader.Value);
-            Assert.AreEqual(expected.Item2, reader.Type);
+            var reader = new CBORReader(new MemoryStream(new byte[] { 0x83, 0x01, 0x82, 0x02, 0x03, 0x82, 0x04, 0x05 }));
+
+            foreach (var expected in expectedValues)
+            {
+                reader.Read();
+
+                Assert.AreEqual(expected.Item1, reader.Value);
+                Assert.AreEqual(expected.Item2, reader.Type);
+            }
         }
+
+        [TestMethod]
+        public void TestMap()
+        {
+            var expectedValues = new List<Tuple<ulong, CBORType>> {
+                { 0ul, CBORType.MapBegin },
+                { 0ul, CBORType.MapEnd },
+            };
+
+            var reader = new CBORReader(new MemoryStream(new byte[] { 0xa0 }));
+
+            foreach (var expected in expectedValues)
+            {
+                reader.Read();
+
+                Assert.AreEqual(expected.Item1, reader.Value);
+                Assert.AreEqual(expected.Item2, reader.Type);
+            }
+
+            //{ 1: 2, 3: 4}
+            //0xa201020304
+
+            expectedValues = new List<Tuple<ulong, CBORType>> {
+                { 2ul, CBORType.MapBegin },
+                { 1ul, CBORType.PositiveInteger },
+                { 2ul, CBORType.PositiveInteger },
+                { 3ul, CBORType.PositiveInteger },
+                { 4ul, CBORType.PositiveInteger },
+                { 0ul, CBORType.MapEnd },
+            };
+
+            reader = new CBORReader(new MemoryStream(new byte[] { 0xa2, 0x01, 0x02, 0x03, 0x04 }));
+
+            foreach (var expected in expectedValues)
+            {
+                reader.Read();
+
+                Assert.AreEqual(expected.Item1, reader.Value);
+                Assert.AreEqual(expected.Item2, reader.Type);
+            }
+        }
+
+        [TestMethod]
+        public void TestArrayMap()
+        {
+            //{"a": 1, "b": [2, 3]}        
+            //0xa26161016162820203 
+
+            var expectedValues = new List<Tuple<object, CBORType>> {
+                { 2ul, CBORType.MapBegin },
+                { "a", CBORType.Text },
+                { 1ul, CBORType.PositiveInteger },
+                { "b", CBORType.Text },
+                { 2ul, CBORType.ArrayBegin },
+                { 2ul, CBORType.PositiveInteger },
+                { 3ul, CBORType.PositiveInteger },
+                { 0ul, CBORType.ArrayEnd },
+                { 0ul, CBORType.MapEnd },
+            };
+
+            var reader = new CBORReader(new MemoryStream(new byte[] { 0xa2, 0x61, 0x61, 0x01, 0x61, 0x62, 0x82, 0x02, 0x03 }));
+
+            foreach (var expected in expectedValues)
+            {
+                reader.Read();
+
+                Assert.AreEqual(expected.Item1, reader.Value);
+                Assert.AreEqual(expected.Item2, reader.Type);
+            }
+
+            //["a", {"b": "c"}]        
+            //0x826161a161626163
+
+            expectedValues = new List<Tuple<object, CBORType>> {
+                { 2ul, CBORType.ArrayBegin },
+                { "a", CBORType.Text },
+                { 1ul, CBORType.MapBegin },
+                { "b", CBORType.Text },
+                { "c", CBORType.Text },
+                { 0ul, CBORType.MapEnd },
+                { 0ul, CBORType.ArrayEnd },
+            };
+
+            reader = new CBORReader(new MemoryStream(new byte[] { 0x82, 0x61, 0x61, 0xa1, 0x61, 0x62, 0x61, 0x63 }));
+
+            foreach (var expected in expectedValues)
+            {
+                reader.Read();
+
+                Assert.AreEqual(expected.Item1, reader.Value);
+                Assert.AreEqual(expected.Item2, reader.Type);
+            }
         }
     }
 }

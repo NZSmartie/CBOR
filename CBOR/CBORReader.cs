@@ -165,7 +165,7 @@ namespace CBOR
                         throw new InvalidDataException("Indefinite byte-string has incorrect nested major type");
                     if(State.IsIndefinite)
                         throw new InvalidDataException("Nested indefinite byte-string is not permitted");
-                    Value = _reader.ReadBytes(Convert.ToInt32((ulong)Value));
+                    Value = _reader.ReadBytes(State.Length);
                     break;
                 case CBORMajorType.TextString:
                     Type = CBORType.Text;
@@ -174,7 +174,7 @@ namespace CBOR
                         throw new InvalidDataException("Indefinite text-string has incorrect nested major type");
                     if (State.IsIndefinite)
                         throw new InvalidDataException("Nested indefinite text-string is not permitted");
-                    Value = System.Text.Encoding.UTF8.GetString(_reader.ReadBytes(Convert.ToInt32((ulong)Value)));
+                    Value = System.Text.Encoding.UTF8.GetString(_reader.ReadBytes(State.Length));
                     break;
                 case CBORMajorType.Array:
                     PrepareCollection();
@@ -183,6 +183,7 @@ namespace CBOR
                     break;
                 case CBORMajorType.Map:
                     PrepareCollection();
+                    State.Length *= 2;
                     Type = CBORType.MapBegin;
                     Push();
                     break;
