@@ -238,6 +238,7 @@ namespace CBOR.Tests
                 writer.Write(1);
                 writer.Write(2);
                 writer.Write(3);
+                writer.EndCollection();
             }
 
             var actual = output.ToArray();
@@ -277,6 +278,7 @@ namespace CBOR.Tests
                 writer.Write(23);
                 writer.Write(24);
                 writer.Write(25);
+                writer.EndCollection();
             }
 
             actual = output.ToArray();
@@ -295,9 +297,12 @@ namespace CBOR.Tests
                 writer.BeginCollection(CBORMajorType.Array, 2);
                 writer.Write(2);
                 writer.Write(3);
+                writer.EndCollection();
                 writer.BeginCollection(CBORMajorType.Array, 2);
                 writer.Write(4);
                 writer.Write(5);
+                writer.EndCollection();
+                writer.EndCollection();
             }
 
             var actual = output.ToArray();
@@ -312,6 +317,7 @@ namespace CBOR.Tests
             using (var writer = new CBORWriter(output))
             {
                 writer.BeginCollection(CBORMajorType.Map, 0);
+                writer.EndCollection();
             }
 
             var actual = output.ToArray();
@@ -326,6 +332,7 @@ namespace CBOR.Tests
                 writer.Write(2);
                 writer.Write(3);
                 writer.Write(4);
+                writer.EndCollection();
             }
 
             actual = output.ToArray();
@@ -346,6 +353,8 @@ namespace CBOR.Tests
                 writer.BeginCollection(CBORMajorType.Array, 2);
                 writer.Write(2);
                 writer.Write(3);
+                writer.EndCollection();
+                writer.EndCollection();
             }
 
             var actual = output.ToArray();
@@ -360,6 +369,8 @@ namespace CBOR.Tests
                 writer.BeginCollection(CBORMajorType.Map, 1);
                 writer.Write("b");
                 writer.Write("c");
+                writer.EndCollection();
+                writer.EndCollection();
             }
 
             actual = output.ToArray();
@@ -415,6 +426,7 @@ namespace CBOR.Tests
                 writer.BeginCollection(CBORMajorType.Array, 2);
                 writer.Write(2);
                 writer.Write(3);
+                writer.EndCollection();
                 writer.BeginCollection(CBORMajorType.Array, -1);
                 writer.Write(4);
                 writer.Write(5);

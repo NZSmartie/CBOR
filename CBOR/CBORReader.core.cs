@@ -1,36 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 using CBOR.Extensions;
 
 namespace CBOR
 {
-    internal class CBORReaderState
-    {
-        private CBORMajorType _majorType;
-        internal CBORMajorType MajorType
-        {
-            get { return _majorType; }
-            set
-            {
-                _majorType = value;
-                IsCollection = CBORReader.Collectiontypes.Contains(value);
-            }
-        }
-
-        internal int SimpleType;
-
-        internal int Tag;
-
-        internal bool IsCollection { get; private set; }
-
-        internal bool IsIndefinite { get => Length < 0; set { if (value) Length = -1; } }
-
-        internal int Length = 0;
-    }
-
     public partial class CBORReader : IDisposable
     {
         internal static readonly CBORMajorType[] Collectiontypes = new CBORMajorType[] { CBORMajorType.ByteString, CBORMajorType.TextString, CBORMajorType.Array, CBORMajorType.Map };
@@ -53,11 +28,11 @@ namespace CBOR
 
         private readonly BinaryReader _reader;
 
-        private readonly Stack<CBORReaderState> _state = new Stack<CBORReaderState>();
+        private readonly Stack<CBORState> _state = new Stack<CBORState>();
 
-        private CBORReaderState ParentState => _state.Peek();
+        private CBORState ParentState => _state.Peek();
 
-        private CBORReaderState State = new CBORReaderState();
+        private CBORState State = new CBORState();
 
         public CBORReader(Stream stream)
         {
@@ -212,10 +187,10 @@ namespace CBOR
             }
         }
 
-        private void Push(CBORReaderState state = null)
+        private void Push(CBORState state = null)
         {
             _state.Push(State);
-            State = state ?? new CBORReaderState();
+            State = state ?? new CBORState();
         }
 
         private void Pop()
