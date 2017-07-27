@@ -31,7 +31,7 @@ namespace CBOR
         internal int Length = 0;
     }
 
-    public class CBORReader : IDisposable
+    public partial class CBORReader : IDisposable
     {
         internal static readonly CBORMajorType[] Collectiontypes = new CBORMajorType[] { CBORMajorType.ByteString, CBORMajorType.TextString, CBORMajorType.Array, CBORMajorType.Map };
 
@@ -46,6 +46,7 @@ namespace CBOR
         public int Tag { get => State.Tag; protected set => State.Tag = value; }
 
 #endregion
+
         public CBORType Type { get; protected set; }
 
         public Object Value { get; protected set; }
@@ -237,14 +238,6 @@ namespace CBOR
                 case 28: case 29: case 30: throw new InvalidDataException(); // unassigned
                 case 31: State.IsIndefinite = true; Value = -1l; break; // Indefinite array or map
             }
-        }
-
-        /// <summary>
-        /// Skips the children of the current type 
-        /// </summary>
-        public void Skip()
-        {
-            
         }
 
         public void Dispose()
