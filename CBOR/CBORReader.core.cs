@@ -109,8 +109,15 @@ namespace CBOR
                     else if (SimpleType == (int)CBORSimpleType.HalfFloat)
                     {
                         Type = CBORType.HalfFloat;
-                        // Todo: Add support for IEEE 754 Half-Precision Floats
-                        throw new NotImplementedException("IEEE 754 Half-Precision Floats is not supported.");
+                        // Suddenly Half-Floats! Thanks to Appendix D. of RFC 7049
+                        var half = Convert.ToUInt16((ulong)Value);
+                        var exp = (half >> 10) & 0x1F;
+                        var mant = half & 0x3FF;
+                        double val;
+                        if (exp == 0) val = mant * Math.Pow(2, -24);
+                        else if (exp != 31) val = (mant + 1024) * Math.Pow(2, exp - 25);
+                        else val = mant == 0 ? double.PositiveInfinity : double.NaN;
+                        Value = ((half & 0x8000) > 0) ? -val : val;
                     }
                     if (SimpleType == (int)CBORSimpleType.SingleFloat)
                     {
